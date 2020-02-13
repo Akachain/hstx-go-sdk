@@ -23,7 +23,7 @@ func GetMSPID(stub shim.ChaincodeStubInterface) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", "Can't get Certificate MSP ID.", err.Error(), common.GetLine())
 	}
-	return &mspid
+	return &mspid, nil
 }
 
 // GetRole func to get 'role' attribute saved in current user's certificate
@@ -40,5 +40,5 @@ func GetAttributeValue(stub shim.ChaincodeStubInterface, attrName string) (*stri
 	if !ok {
 		return nil, fmt.Errorf("%s %s %s", "Can't get attribute in Certificate", "This attr doesn't exist", common.GetLine())
 	}
-	return &val
+	return &val, nil
 }
