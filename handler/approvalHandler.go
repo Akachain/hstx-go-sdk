@@ -29,7 +29,7 @@ type ApprovalHanler struct{}
 func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
-	role, err := hUtil.GetRole()
+	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -124,7 +124,7 @@ func (sah *ApprovalHanler) GetApprovalByID(stub shim.ChaincodeStubInterface, arg
 func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
 
-	role, err := hUtil.GetRole()
+	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -262,13 +262,9 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 }
 
 func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) {
-	role, err := hUtil.GetRole()
+	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
+		return
 	}
 
 	resIterator, err := util.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID))

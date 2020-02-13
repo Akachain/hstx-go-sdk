@@ -21,7 +21,7 @@ type SuperAdminHanler struct{}
 func (sah *SuperAdminHanler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
-	role, err := hUtil.GetRole
+	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -87,7 +87,7 @@ func (sah *SuperAdminHanler) GetSuperAdminByID(stub shim.ChaincodeStubInterface,
 func (sah *SuperAdminHanler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
 
-	role, err := hUtil.GetRole
+	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
