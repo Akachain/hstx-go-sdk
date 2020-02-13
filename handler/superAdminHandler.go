@@ -20,7 +20,7 @@ type SuperAdminHanler struct{}
 func (sah *SuperAdminHanler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
-	role, err := hUtil.getRole
+	role, err := hUtil.GetRole
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -30,7 +30,7 @@ func (sah *SuperAdminHanler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, 
 	}
 
 	superAdmin := new(model.SuperAdmin)
-	err := json.Unmarshal([]byte(args[0]), superAdmin)
+	err = json.Unmarshal([]byte(args[0]), superAdmin)
 	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -86,7 +86,7 @@ func (sah *SuperAdminHanler) GetSuperAdminByID(stub shim.ChaincodeStubInterface,
 func (sah *SuperAdminHanler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
 
-	role, err := hUtil.getRole
+	role, err := hUtil.GetRole
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -96,7 +96,7 @@ func (sah *SuperAdminHanler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, 
 	}
 
 	tmpSuperAdmin := new(model.SuperAdmin)
-	err := json.Unmarshal([]byte(args[0]), tmpSuperAdmin)
+	err = json.Unmarshal([]byte(args[0]), tmpSuperAdmin)
 	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{

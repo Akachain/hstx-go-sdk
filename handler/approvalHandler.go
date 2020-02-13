@@ -29,7 +29,7 @@ type ApprovalHanler struct{}
 func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
-	role, err := hUtil.getRole
+	role, err := hUtil.GetRole()
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -39,7 +39,7 @@ func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args
 	}
 
 	approval := new(model.Approval)
-	err := json.Unmarshal([]byte(args[0]), approval)
+	err = json.Unmarshal([]byte(args[0]), approval)
 	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -124,7 +124,7 @@ func (sah *ApprovalHanler) GetApprovalByID(stub shim.ChaincodeStubInterface, arg
 func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
 
-	role, err := hUtil.getRole
+	role, err := hUtil.GetRole()
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -134,7 +134,7 @@ func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args
 	}
 
 	tmpApproval := new(model.Approval)
-	err := json.Unmarshal([]byte(args[0]), tmpApproval)
+	err = json.Unmarshal([]byte(args[0]), tmpApproval)
 	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
@@ -262,7 +262,7 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 }
 
 func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) {
-	role, err := hUtil.getRole
+	role, err := hUtil.GetRole()
 	if (err != nil) {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
