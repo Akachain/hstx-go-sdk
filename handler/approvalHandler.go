@@ -37,6 +37,13 @@ func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args
 			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
 		})
 	}
+	if (*role != "SuperAdmin") {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+		})
+	}
 
 	approval := new(model.Approval)
 	err = json.Unmarshal([]byte(args[0]), approval)
@@ -126,6 +133,13 @@ func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args
 
 	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+		})
+	}
+	if (*role != "SuperAdmin") {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
@@ -263,7 +277,7 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 
 func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) {
 	role, err := hUtil.GetRole(stub)
-	if (err != nil) {
+	if (err != nil || *role != "SuperAdmin") {
 		return
 	}
 

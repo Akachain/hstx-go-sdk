@@ -29,6 +29,13 @@ func (sah *SuperAdminHanler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, 
 			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
 		})
 	}
+	if (*role != "SuperAdmin") {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+		})
+	}
 
 	superAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(args[0]), superAdmin)
@@ -89,6 +96,13 @@ func (sah *SuperAdminHanler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, 
 
 	role, err := hUtil.GetRole(stub)
 	if (err != nil) {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+		})
+	}
+	if (*role != "SuperAdmin") {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
