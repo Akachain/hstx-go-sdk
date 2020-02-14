@@ -43,7 +43,11 @@ func (s *Chaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	invokeFunc := router[functionName]
-	return invokeFunc(stub, args)
+	if invokeFunc != nil {
+		return invokeFunc(stub, args)
+	} else {
+		return s.Query(stub)
+	}
 }
 
 // Query callback representing the query of a chaincode
