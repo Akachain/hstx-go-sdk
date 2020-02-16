@@ -30,18 +30,18 @@ func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
 	role, err := hUtil.GetRole(stub)
-	if (err != nil) {
+	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
 			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
 		})
 	}
-	if (*role != "SuperAdmin") {
+	if *role != "SuperAdmin" {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "The role is not SuperAdmin.", common.GetLine()),
 		})
 	}
 
@@ -132,18 +132,18 @@ func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
 
 	role, err := hUtil.GetRole(stub)
-	if (err != nil) {
+	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
 			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
 		})
 	}
-	if (*role != "SuperAdmin") {
+	if *role != "SuperAdmin" {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
 			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "The role is not SuperAdmin.", common.GetLine()),
 		})
 	}
 
@@ -277,7 +277,26 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 
 func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) {
 	role, err := hUtil.GetRole(stub)
-	if (err != nil || *role != "SuperAdmin") {
+	if err != nil || *role != "SuperAdmin" {
+		return
+	}
+
+	if strings.Compare(approval.Status, "Rejected") == 0 {
+		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
+		if err != nil {
+			return
+		}
+		proposal := new(model.Proposal)
+		mapstructure.Decode(rawProposal, proposal)
+		if strings.Compare(proposal.Status, "Pending") == 0 {
+			proposal.Status = approval.Status
+			proposal.CreatedAt = approval.CreatedAt
+			bytes, err := json.Marshal(proposal)
+			if err != nil {
+				return
+			}
+			new(ProposalHanler).UpdateProposal(stub, []string{string(bytes)})
+		}
 		return
 	}
 
