@@ -42,3 +42,25 @@ func GetAttributeValue(stub shim.ChaincodeStubInterface, attrName string) (*stri
 	}
 	return &val, nil
 }
+
+// GetByOneColumn func to get information
+func GetByOneColumn(stub shim.ChaincodeStubInterface, table string, column string, value interface{}) (resultsIterator shim.StateQueryIteratorInterface, err error) {
+	queryString := fmt.Sprintf("{\"selector\": {\"_id\": {\"$regex\": \"%s\"},\"%s\": %v}}", table, column, value)
+	common.Logger.Info(queryString)
+	resultsIterator, err = stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	return resultsIterator, nil
+}
+
+// GetByTwoColumns func to get information
+func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 string, value1 interface{}, column2 string, value2 interface{}) (resultsIterator shim.StateQueryIteratorInterface, err error) {
+	queryString := fmt.Sprintf("{\"selector\": {\"_id\": {\"$regex\": \"%s\"},\"%s\": %v, \"%s\": %v}}", table, column1, value1, column2, value2)
+	common.Logger.Info(queryString)
+	resultsIterator, err = stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	return resultsIterator, nil
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/Akachain/akc-go-sdk/util"
 	"github.com/Akachain/hstx-go-sdk/model"
+	hUtil "github.com/Akachain/hstx-go-sdk/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/mitchellh/mapstructure"
@@ -109,7 +110,7 @@ func (sah *ProposalHanler) GetPendingProposalBySuperAdminID(stub shim.ChaincodeS
 
 	for i := len(proposalList) - 1; i >= 0; i-- {
 		proposal := proposalList[i]
-		rs, err := util.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", proposal.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", superAdminID))
+		rs, err := hUtil.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", proposal.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", superAdminID))
 		if err != nil {
 			resErr := common.ResponseError{common.ERR4, fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())}
 			return common.RespondError(resErr)
@@ -231,7 +232,7 @@ func (sah *ProposalHanler) CommitProposal(stub shim.ChaincodeStubInterface, args
 		return common.RespondError(resErr)
 	}
 
-	resIterator, err := util.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", tmpProposal.ProposalID))
+	resIterator, err := hUtil.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", tmpProposal.ProposalID))
 	if err != nil {
 		resErr := common.ResponseError{
 			ResCode: common.ERR13,

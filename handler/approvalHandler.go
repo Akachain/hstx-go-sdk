@@ -55,7 +55,7 @@ func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args
 		})
 	}
 
-	rs, err := util.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", approval.ApproverID))
+	rs, err := hUtil.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", approval.ApproverID))
 	if err != nil {
 		resErr := common.ResponseError{common.ERR4, fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())}
 		return common.RespondError(resErr)
@@ -300,7 +300,7 @@ func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, appr
 		return
 	}
 
-	resIterator, err := util.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID))
+	resIterator, err := hUtil.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID))
 	if err != nil {
 		return
 	}
