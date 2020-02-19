@@ -12,7 +12,7 @@ import (
 func GetCertID(stub shim.ChaincodeStubInterface) (*string, error) {
 	id, err := cid.GetID(stub)
 	if err != nil {
-		return nil, fmt.Errorf("%s %s %s", "Can't get Certificate ID.", err.Error(), common.GetLine())
+		return nil, fmt.Errorf("Can't get Certificate ID. Cause: %s %s", err.Error(), common.GetLine())
 	}
 	return &id, nil
 }
@@ -21,7 +21,7 @@ func GetCertID(stub shim.ChaincodeStubInterface) (*string, error) {
 func GetMSPID(stub shim.ChaincodeStubInterface) (*string, error) {
 	mspid, err := cid.GetMSPID(stub)
 	if err != nil {
-		return nil, fmt.Errorf("%s %s %s", "Can't get Certificate MSP ID.", err.Error(), common.GetLine())
+		return nil, fmt.Errorf("Can't get MSP ID. Cause: %s %s", err.Error(), common.GetLine())
 	}
 	return &mspid, nil
 }
@@ -35,10 +35,10 @@ func GetRole(stub shim.ChaincodeStubInterface) (*string, error) {
 func GetAttributeValue(stub shim.ChaincodeStubInterface, attrName string) (*string, error) {
 	val, ok, err := cid.GetAttributeValue(stub, attrName)
 	if err != nil {
-		return nil, fmt.Errorf("%s %s %s", "Can't get attribute in Certificate", err.Error(), common.GetLine())
+		return nil, fmt.Errorf("Can't get attribute '%s' in the Certificate. Cause: %s %s", attrName, err.Error(), common.GetLine())
 	}
 	if !ok {
-		return nil, fmt.Errorf("%s %s %s", "Can't get attribute in Certificate", "This attr doesn't exist", common.GetLine())
+		return nil, fmt.Errorf("Can't get attribute '%s' in the Certificate. Cause: %s", attrName, common.GetLine())
 	}
 	return &val, nil
 }

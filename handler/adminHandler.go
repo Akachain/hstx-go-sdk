@@ -8,6 +8,7 @@ import (
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/Akachain/akc-go-sdk/util"
 	"github.com/Akachain/hstx-go-sdk/model"
+	hUtil "github.com/Akachain/hstx-go-sdk/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/mitchellh/mapstructure"
@@ -20,8 +21,24 @@ type AdminHanler struct{}
 func (sah *AdminHanler) CreateAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
+	role, err := hUtil.GetRole(stub)
+	if err != nil {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
+		})
+	}
+	if *role != "SuperAdmin" {
+		// Return error: can't unmashal json
+		return common.RespondError(common.ResponseError{
+			ResCode: common.ERR3,
+			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "The role is not SuperAdmin.", common.GetLine()),
+		})
+	}
+
 	admin := new(model.Admin)
-	err := json.Unmarshal([]byte(args[0]), admin)
+	err = json.Unmarshal([]byte(args[0]), admin)
 	if err != nil {
 		// Return error: can't unmashal json
 		return common.RespondError(common.ResponseError{
