@@ -21,22 +21,6 @@ type SuperAdminHanler struct{}
 func (sah *SuperAdminHanler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
 
-	role, err := hUtil.GetRole(stub)
-	if err != nil {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
-	}
-	if *role != "SuperAdmin" {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "The role is not SuperAdmin.", common.GetLine()),
-		})
-	}
-
 	superAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(args[0]), superAdmin)
 	if err != nil {
@@ -93,22 +77,6 @@ func (sah *SuperAdminHanler) GetSuperAdminByID(stub shim.ChaincodeStubInterface,
 //UpdateSuperAdmin ...
 func (sah *SuperAdminHanler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
-
-	role, err := hUtil.GetRole(stub)
-	if err != nil {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
-	}
-	if *role != "SuperAdmin" {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "The role is not SuperAdmin.", common.GetLine()),
-		})
-	}
 
 	tmpSuperAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(args[0]), tmpSuperAdmin)
