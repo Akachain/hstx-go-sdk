@@ -69,7 +69,7 @@ func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 str
 func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signature string, message string) error {
 
 	if len(publicKey) == 0 {
-		return errors.New("approverID is empty")
+		return errors.New("publicKey is empty")
 	}
 	if len(signature) == 0 {
 		return errors.New("signature is empty")
