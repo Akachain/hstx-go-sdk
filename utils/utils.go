@@ -64,3 +64,56 @@ func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 str
 	}
 	return resultsIterator, nil
 }
+
+// verifySignature func base on approver's public key, signature and message that was singed
+func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signature string, message string) error {
+
+	if len(publicKey) == 0 {
+		return errors.New("approverID is empty")
+	}
+	if len(signature) == 0 {
+		return errors.New("signature is empty")
+	}
+
+	// Start verify
+	pkBytes := []byte(publicKey)
+	pkBlock, _ := pem.Decode(pkBytes)
+	if pkBlock == nil {
+		return errors.New("Can't decode public key")
+	}
+
+	rawPk, err := x509.ParsePKIXPublicKey(pkBlock.Bytes)
+	if err != nil {
+		return err
+	}
+
+	pk := rawPk.(*ecdsa.PublicKey)
+
+	// SIGNATURE
+	signaturebyte, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	R, S, err := utils.UnmarshalECDSASignature(signaturebyte)
+	if err != nil {
+		return err
+	}
+
+	// DATA
+	dataByte, err := base64.StdEncoding.DecodeString(message)
+	if err != nil {
+		return err
+	}
+
+	hash := sha256.Sum256(dataByte)
+	var hashData = hash[:]
+
+	// VERIFY
+	checksign := ecdsa.Verify(pk, hashData, R, S)
+
+	if checksign {
+		return nil
+	}
+	return errors.New("Verify failed")
+}
