@@ -2,8 +2,14 @@ package utils
 
 import (
 	"fmt"
+	"crypto/ecdsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 
 	"github.com/Akachain/akc-go-sdk/common"
+	"github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
@@ -67,19 +73,18 @@ func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 str
 
 // verifySignature func base on approver's public key, signature and message that was singed
 func verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signature string, message string) error {
-
 	if len(publicKey) == 0 {
-		return errors.New("publicKey is empty")
+		return fmt.Errorf("publicKey is empty %s", common.GetLine())
 	}
 	if len(signature) == 0 {
-		return errors.New("signature is empty")
+		return fmt.Errorf("signature is empty %s", common.GetLine())
 	}
 
 	// Start verify
 	pkBytes := []byte(publicKey)
 	pkBlock, _ := pem.Decode(pkBytes)
 	if pkBlock == nil {
-		return errors.New("Can't decode public key")
+		return fmt.Errorf("Can't decode public key %s", common.GetLine())
 	}
 
 	rawPk, err := x509.ParsePKIXPublicKey(pkBlock.Bytes)
