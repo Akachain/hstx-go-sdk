@@ -120,5 +120,5 @@ func verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signatu
 	if checksign {
 		return nil
 	}
-	return errors.New("Verify failed")
+	return fmt.Errorf("Verify failed %s", common.GetLine())
 }
