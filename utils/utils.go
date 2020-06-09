@@ -66,7 +66,7 @@ func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 str
 }
 
 // verifySignature func base on approver's public key, signature and message that was singed
-func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signature string, message string) error {
+func verifySignature(stub shim.ChaincodeStubInterface, publicKey string, signature string, message string) error {
 
 	if len(publicKey) == 0 {
 		return errors.New("publicKey is empty")
