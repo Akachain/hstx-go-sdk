@@ -222,7 +222,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 			if err != nil {
 				return err
 			}
-			new(ProposalHanler).UpdateProposal(stub, []string{string(bytes)})
+			new(ProposalHandler).UpdateProposal(stub, string(bytes))
 		}
 		return nil
 	}
@@ -254,7 +254,8 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 			if err != nil {
 				return err
 			}
-			new(ProposalHanler).UpdateProposal(stub, []string{string(bytes)})
+			new(ProposalHandler).UpdateProposal(stub, string(bytes))
 		}
 	}
+	return nil
 }

@@ -6,8 +6,8 @@ replace github.com/satori/go.uuid v1.2.0 => github.com/satori/go.uuid v1.2.1-0.2
 
 require (
 	github.com/Akachain/akc-go-sdk v1.1.1
-	github.com/VictoriaMetrics/fastcache v1.5.7 // indirect
+	github.com/Shopify/sarama v1.26.4 // indirect
+	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hyperledger/fabric v1.4.4
-	github.com/hyperledger/fabric-protos-go v0.0.0-20200124220212-e9cfc186ba7b // indirect
 	github.com/mitchellh/mapstructure v1.1.2
 )

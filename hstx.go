@@ -31,15 +31,15 @@ func (s *Chaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	functionName, args := stub.GetFunctionAndParameters()
 
 	router := map[string]func(shim.ChaincodeStubInterface, []string) pb.Response{
-		"CreateSuperAdmin": handler.SuperAdminHanler.CreateSuperAdmin,
-		"UpdateSuperAdmin": handler.SuperAdminHanler.UpdateSuperAdmin,
-		"CreateAdmin":      handler.AdminHanler.CreateAdmin,
-		"UpdateAdmin":      handler.AdminHanler.UpdateAdmin,
-		"CreateProposal":   handler.ProposalHanler.CreateProposal,
-		"UpdateProposal":   handler.ProposalHanler.UpdateProposal,
-		"CommitProposal":   handler.ProposalHanler.CommitProposal,
-		"CreateApproval":   handler.ApprovalHanler.CreateApproval,
-		"UpdateApproval":   handler.ApprovalHanler.UpdateApproval,
+		// "CreateSuperAdmin": handler.SuperAdminHandler.CreateSuperAdmin,
+		// "UpdateSuperAdmin": handler.SuperAdminHandler.UpdateSuperAdmin,
+		// "CreateAdmin":      handler.AdminHandler.CreateAdmin,
+		// "UpdateAdmin":      handler.AdminHandler.UpdateAdmin,
+		// "CreateProposal":   handler.ProposalHandler.CreateProposal,
+		// "UpdateProposal":   handler.ProposalHandler.UpdateProposal,
+		// "CommitProposal":   handler.ProposalHandler.CommitProposal,
+		// "CreateApproval":   handler.ApprovalHandler.CreateApproval,
+		// "UpdateApproval":   handler.ApprovalHandler.UpdateApproval,
 	}
 
 	invokeFunc := router[functionName]
@@ -58,15 +58,15 @@ func (s *Chaincode) Query(stub shim.ChaincodeStubInterface) pb.Response {
 	functionName, args := stub.GetFunctionAndParameters()
 
 	router := map[string]func(shim.ChaincodeStubInterface, []string) pb.Response{
-		"GetAllSuperAdmin":                 handler.SuperAdminHanler.GetAllSuperAdmin,
-		"GetSuperAdminByID":                handler.SuperAdminHanler.GetSuperAdminByID,
-		"GetAllAdmin":                      handler.AdminHanler.GetAllAdmin,
-		"GetAdminByID":                     handler.AdminHanler.GetAdminByID,
-		"GetAllProposal":                   handler.ProposalHanler.GetAllProposal,
-		"GetProposalByID":                  handler.ProposalHanler.GetProposalByID,
-		"GetPendingProposalBySuperAdminID": handler.ProposalHanler.GetPendingProposalBySuperAdminID,
-		"GetAllApproval":                   handler.ApprovalHanler.GetAllApproval,
-		"GetApprovalByID":                  handler.ApprovalHanler.GetApprovalByID,
+		// "GetAllSuperAdmin":                 handler.SuperAdminHandler.GetAllSuperAdmin,
+		// "GetSuperAdminByID":                handler.SuperAdminHandler.GetSuperAdminByID,
+		// "GetAllAdmin":                      handler.AdminHandler.GetAllAdmin,
+		// "GetAdminByID":                     handler.AdminHandler.GetAdminByID,
+		// "GetAllProposal":                   handler.ProposalHandler.GetAllProposal,
+		// "GetProposalByID":                  handler.ProposalHandler.GetProposalByID,
+		// "GetPendingProposalBySuperAdminID": handler.ProposalHandler.GetPendingProposalBySuperAdminID,
+		// "GetAllApproval":                   handler.ApprovalHandler.GetAllApproval,
+		// "GetApprovalByID":                  handler.ApprovalHandler.GetApprovalByID,
 	}
 
 	queryFunc := router[functionName]

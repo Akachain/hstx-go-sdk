@@ -9,7 +9,6 @@ import (
 	"github.com/Akachain/akc-go-sdk/util"
 	"github.com/Akachain/hstx-go-sdk/model"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -70,7 +69,7 @@ func (sah *SuperAdminHandler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface,
 	common.Logger.Debugf("Input-data sent to UpdateSuperAdmin func: %+v\n", superAdminStr)
 	
 	newSuperAdmin := new(model.SuperAdmin)
-	err = json.Unmarshal([]byte(args[0]), newSuperAdmin)
+	err = json.Unmarshal([]byte(superAdminStr), newSuperAdmin)
 	if err != nil { // Return error: Can't unmarshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
