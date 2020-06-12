@@ -18,174 +18,135 @@ import (
 	hUtil "github.com/Akachain/hstx-go-sdk/utils"
 	"github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	pb "github.com/hyperledger/fabric/protos/peer"
 	"github.com/mitchellh/mapstructure"
 )
 
-// ApprovalHanler ...
-type ApprovalHanler struct{}
+// ApprovalHandler ...
+type ApprovalHandler struct{}
 
 // CreateApproval ...
-func (sah *ApprovalHanler) CreateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	util.CheckChaincodeFunctionCallWellFormedness(args, 3)
+func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
+	common.Logger.Debugf("Input-data sent to CreateApproval func: %+v\n", approvalStr)
 
 	approval := new(model.Approval)
-	err = json.Unmarshal([]byte(args[0]), approval)
-	if err != nil {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
+	err = json.Unmarshal([]byte(approvalStr), approval)
+	if err != nil { // Return error: Can't unmarshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
 	rs, err := hUtil.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", approval.ApproverID))
-	if err != nil {
-		resErr := common.ResponseError{common.ERR4, fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())}
-		return common.RespondError(resErr)
+	if err != nil { // Return error: Fail to get data
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	if rs.HasNext() {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], "This proposal had already been approved", common.GetLine()),
-		})
+	if rs.HasNext() { // Return error: Only signing once
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR9], "This proposal had already been approved", common.GetLine())
 	}
 
 	approval.ApprovalID = stub.GetTxID()
 
+	// Verify signature with the singed message
 	err = sah.verifySignature(stub, approval.ApproverID, approval.Signature, approval.Message)
-	if err != nil {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s", err.Error(), common.GetLine()),
-		})
+	if err != nil { // Return error: Verify error
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR8], err.Error(), common.GetLine())
 	}
 
+	// Set approval's status
 	if len(approval.Status) == 0 {
 		approval.Status = "Approved"
 	}
 
-	common.Logger.Infof("Create Approval: %+v\n", approval)
+	common.Logger.Infof("Creating Approval: %+v\n", approval)
 	err = util.Createdata(stub, model.ApprovalTable, []string{approval.ApprovalID}, &approval)
-	if err != nil {
-		resErr := common.ResponseError{
-			ResCode: common.ERR5,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine()),
-		}
-		return common.RespondError(resErr)
+	if err != nil { // Return error: Fail to insert data
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine())
 	}
 
 	// Update proposal if necessary
 	sah.updateProposal(stub, approval)
 
 	bytes, err := json.Marshal(approval)
-	if err != nil {
-		// Return error: can't mashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR5,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine()),
-		})
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	*result = string(bytes)
 
-	resSuc := common.ResponseSuccess{
-		ResCode: common.SUCCESS,
-		Msg:     common.ResCodeDict[common.SUCCESS],
-		Payload: string(bytes)}
-	return common.RespondSuccess(resSuc)
+	return result, nil
 }
 
 // GetAllApproval ...
-func (sah *ApprovalHanler) GetAllApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+func (sah *ApprovalHandler) GetAllApproval(stub shim.ChaincodeStubInterface) (result *string, err error) {
 	res := util.GetAllData(stub, new(model.Approval), model.ApprovalTable)
-	return res
+	if res.Status == 200 {
+		return &res.Message, nil
+	} else {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
 }
 
 // GetApprovalByID ...
-func (sah *ApprovalHanler) GetApprovalByID(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
+func (sah *ApprovalHandler) GetApprovalByID(stub shim.ChaincodeStubInterface, approvalID string) (result *string, err error) {
+	common.Logger.Debugf("Input-data sent to GetApprovalByID func: %+v\n", approvalID)
 
-	approvalID := args[0]
 	res := util.GetDataByID(stub, approvalID, new(model.Approval), model.ApprovalTable)
-	return res
+	if res.Status == 200 {
+		return &res.Message, nil
+	} else {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
 }
 
-//UpdateApproval ...
-func (sah *ApprovalHanler) UpdateApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	util.CheckChaincodeFunctionCallWellFormedness(args, 1)
+// UpdateApproval ...
+func (sah *ApprovalHandler) UpdateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
+	common.Logger.Debugf("Input-data sent to UpdateApproval func: %+v\n", approvalStr)
 
-	tmpApproval := new(model.Approval)
-	err = json.Unmarshal([]byte(args[0]), tmpApproval)
-	if err != nil {
-		// Return error: can't unmashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
+	newApproval := new(model.Approval)
+	err = json.Unmarshal([]byte(approvalStr), newApproval)
+	if err != nil { // Return error: Can't unmarshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
-	if len(tmpApproval.ApprovalID) == 0 {
-		resErr := common.ResponseError{
-			ResCode: common.ERR13,
-			Msg:     fmt.Sprintf("%s %s", common.ResCodeDict[common.ERR13], err.Error()),
-		}
-		return common.RespondError(resErr)
+	if len(newApproval.ApprovalID) == 0 {
+		return nil, fmt.Errorf("%s %s", "This ApprovalID can't be empty", common.GetLine())
 	}
 
-	//get approval information
-	rawApproval, err := util.Getdatabyid(stub, tmpApproval.ApprovalID, model.ApprovalTable)
+	// Get approval information
+	rawApproval, err := util.Getdatabyid(stub, newApproval.ApprovalID, model.ApprovalTable)
 	if err != nil {
-		resErr := common.ResponseError{
-			ResCode: common.ERR4,
-			Msg:     fmt.Sprintf("%s %s", common.ResCodeDict[common.ERR4], err.Error()),
-		}
-		return common.RespondError(resErr)
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
 
 	approval := new(model.Approval)
 	mapstructure.Decode(rawApproval, approval)
 
-	tmpApprovalVal := reflect.ValueOf(tmpApproval).Elem()
-	approvalVal := reflect.ValueOf(approval).Elem()
-	for i := 0; i < tmpApprovalVal.NumField(); i++ {
-		fieldName := tmpApprovalVal.Type().Field(i).Name
-		if len(tmpApprovalVal.Field(i).String()) > 0 {
-			field := approvalVal.FieldByName(fieldName)
+	// Filter fields needed to update
+	newApprovalValue := reflect.ValueOf(newApproval).Elem()
+	approvalValue := reflect.ValueOf(approval).Elem()
+	for i := 0; i < newApprovalValue.NumField(); i++ {
+		fieldName := newApprovalValue.Type().Field(i).Name
+		if len(newApprovalValue.Field(i).String()) > 0 {
+			field := approvalValue.FieldByName(fieldName)
 			if field.CanSet() {
-				field.SetString(tmpApprovalVal.Field(i).String())
+				field.SetString(newApprovalValue.Field(i).String())
 			}
 		}
 	}
 
 	err = util.Changeinfo(stub, model.ApprovalTable, []string{approval.ApprovalID}, approval)
-	if err != nil {
-		//Overwrite fail
-		resErr := common.ResponseError{
-			ResCode: common.ERR5,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine()),
-		}
-		return common.RespondError(resErr)
+	if err != nil { // Return error: Fail to Update data
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine())
 	}
 
 	bytes, err := json.Marshal(approval)
-	if err != nil {
-		// Return error: can't mashal json
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR5,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine()),
-		})
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	*result = string(bytes)
 
-	resSuc := common.ResponseSuccess{
-		ResCode: common.SUCCESS,
-		Msg:     common.ResCodeDict[common.SUCCESS],
-		Payload: string(bytes)}
-	return common.RespondSuccess(resSuc)
+	return result, nil
 }
 
 // verifySignature ...
-func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, approverID string, signature string, message string) error {
+func (sah *ApprovalHandler) verifySignature(stub shim.ChaincodeStubInterface, approverID string, signature string, message string) error {
 
 	if len(approverID) == 0 {
 		return errors.New("approverID is empty")
@@ -204,7 +165,7 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 	pkBytes := []byte(superAdmin.PublicKey)
 	pkBlock, _ := pem.Decode(pkBytes)
 	if pkBlock == nil {
-		return errors.New("Can't decode public key")
+		return errors.New("can't decode public key")
 	}
 
 	rawPk, err := x509.ParsePKIXPublicKey(pkBlock.Bytes)
@@ -215,12 +176,12 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 	pk := rawPk.(*ecdsa.PublicKey)
 
 	// SIGNATURE
-	signaturebyte, err := base64.StdEncoding.DecodeString(signature)
+	signatureByte, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return err
 	}
 
-	R, S, err := utils.UnmarshalECDSASignature(signaturebyte)
+	R, S, err := utils.UnmarshalECDSASignature(signatureByte)
 	if err != nil {
 		return err
 	}
@@ -235,56 +196,54 @@ func (sah *ApprovalHanler) verifySignature(stub shim.ChaincodeStubInterface, app
 	var hashData = hash[:]
 
 	// VERIFY
-	checksign := ecdsa.Verify(pk, hashData, R, S)
+	checkedResult := ecdsa.Verify(pk, hashData, R, S)
 
-	if checksign {
+	if checkedResult {
 		return nil
 	}
-	return errors.New("Verify failed")
+	return errors.New("verifying failed")
 }
 
-func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) {
-	role, err := hUtil.GetRole(stub)
-	if err != nil || *role != "SuperAdmin" {
-		return
-	}
-
+// updateProposal ...
+func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) error {
 	if strings.Compare(approval.Status, "Rejected") == 0 {
 		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
 		if err != nil {
-			return
+			return err
 		}
+
 		proposal := new(model.Proposal)
 		mapstructure.Decode(rawProposal, proposal)
+
 		if strings.Compare(proposal.Status, "Pending") == 0 {
 			proposal.Status = approval.Status
 			proposal.CreatedAt = approval.CreatedAt
 			bytes, err := json.Marshal(proposal)
 			if err != nil {
-				return
+				return err
 			}
 			new(ProposalHanler).UpdateProposal(stub, []string{string(bytes)})
 		}
-		return
+		return nil
 	}
 
 	resIterator, err := hUtil.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID))
 	if err != nil {
-		return
+		return err
 	}
 	defer resIterator.Close()
 	count := 0
 	for resIterator.HasNext() {
 		_, err := resIterator.Next()
 		if err != nil {
-			return
+			return err
 		}
 		count++
 	}
 	if count >= 1 {
 		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
 		if err != nil {
-			return
+			return err
 		}
 		proposal := new(model.Proposal)
 		mapstructure.Decode(rawProposal, proposal)
@@ -293,7 +252,7 @@ func (sah *ApprovalHanler) updateProposal(stub shim.ChaincodeStubInterface, appr
 			proposal.CreatedAt = approval.CreatedAt
 			bytes, err := json.Marshal(proposal)
 			if err != nil {
-				return
+				return err
 			}
 			new(ProposalHanler).UpdateProposal(stub, []string{string(bytes)})
 		}

@@ -2,16 +2,16 @@ package handler
 
 // Handler ...
 type Handler struct {
-	SuperAdminHanler *SuperAdminHanler
-	AdminHanler      *AdminHanler
-	ProposalHanler   *ProposalHanler
-	ApprovalHanler   *ApprovalHanler
+	SuperAdminHandler *SuperAdminHandler
+	AdminHandler      *AdminHandler
+	ProposalHandler   *ProposalHandler
+	ApprovalHandler   *ApprovalHandler
 }
 
 // InitHandler ...
 func (h *Handler) InitHandler() {
-	h.SuperAdminHanler = new(SuperAdminHanler)
-	h.AdminHanler = new(AdminHanler)
-	h.ProposalHanler = new(ProposalHanler)
-	h.ApprovalHanler = new(ApprovalHanler)
+	h.SuperAdminHandler = new(SuperAdminHandler)
+	h.AdminHandler = new(AdminHandler)
+	h.ProposalHandler = new(ProposalHandler)
+	h.ApprovalHandler = new(ApprovalHandler)
 }
