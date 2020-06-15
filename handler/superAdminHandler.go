@@ -18,7 +18,7 @@ type SuperAdminHandler struct{}
 // CreateSuperAdmin ...
 func (sah *SuperAdminHandler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateSuperAdmin func: %+v\n", superAdminStr)
-	
+
 	superAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), superAdmin)
 	if err != nil { // Return error: Can't unmarshal json
@@ -37,6 +37,8 @@ func (sah *SuperAdminHandler) CreateSuperAdmin(stub shim.ChaincodeStubInterface,
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -47,15 +49,14 @@ func (sah *SuperAdminHandler) GetAllSuperAdmin(stub shim.ChaincodeStubInterface)
 	res := util.GetAllData(stub, new(model.SuperAdmin), model.SuperAdminTable)
 	if res.Status == 200 {
 		return &res.Message, nil
-	} else {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 }
 
 // GetSuperAdminByID ...
 func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface, superAdminID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to SuperAdminHandler func: %+v\n", superAdminID)
-	
+
 	res := util.GetDataByID(stub, superAdminID, new(model.SuperAdmin), model.SuperAdminTable)
 	if res.Status == 200 {
 		return &res.Message, nil
@@ -67,7 +68,7 @@ func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface
 //UpdateSuperAdmin ...
 func (sah *SuperAdminHandler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to UpdateSuperAdmin func: %+v\n", superAdminStr)
-	
+
 	newSuperAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), newSuperAdmin)
 	if err != nil { // Return error: Can't unmarshal json
@@ -109,6 +110,8 @@ func (sah *SuperAdminHandler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface,
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil

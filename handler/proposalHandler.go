@@ -40,6 +40,8 @@ func (sah *ProposalHandler) CreateProposal(stub shim.ChaincodeStubInterface, pro
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -50,15 +52,14 @@ func (sah *ProposalHandler) GetAllProposal(stub shim.ChaincodeStubInterface) (re
 	res := util.GetAllData(stub, new(model.Proposal), model.ProposalTable)
 	if res.Status == 200 {
 		return &res.Message, nil
-	} else {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 }
 
 // GetProposalByID ...
 func (sah *ProposalHandler) GetProposalByID(stub shim.ChaincodeStubInterface, proposalID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to GetProposalByID func: %+v\n", proposalID)
-	
+
 	res := util.GetDataByID(stub, proposalID, new(model.Proposal), model.ProposalTable)
 	if res.Status == 200 {
 		return &res.Message, nil
@@ -109,6 +110,8 @@ func (sah *ProposalHandler) GetPendingProposalBySuperAdminID(stub shim.Chaincode
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -117,7 +120,7 @@ func (sah *ProposalHandler) GetPendingProposalBySuperAdminID(stub shim.Chaincode
 //UpdateProposal ...
 func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, proposalStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to UpdateProposal func: %+v\n", proposalStr)
-	
+
 	newProposal := new(model.Proposal)
 	err = json.Unmarshal([]byte(proposalStr), newProposal)
 	if err != nil { // Return error: Can't unmarshal json
@@ -151,7 +154,7 @@ func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, pro
 	}
 
 	err = util.Changeinfo(stub, model.ProposalTable, []string{proposal.ProposalID}, proposal)
-	if err != nil {// Return error: Fail to Update data
+	if err != nil { // Return error: Fail to Update data
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine())
 	}
 
@@ -159,6 +162,8 @@ func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, pro
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -212,6 +217,8 @@ func (sah *ProposalHandler) CommitProposal(stub shim.ChaincodeStubInterface, pro
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil

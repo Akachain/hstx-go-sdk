@@ -18,13 +18,13 @@ type AdminHandler struct{}
 // CreateAdmin ...
 func (sah *AdminHandler) CreateAdmin(stub shim.ChaincodeStubInterface, adminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateAdmin func: %+v\n", adminStr)
-	
+
 	admin := new(model.Admin)
 	err = json.Unmarshal([]byte(adminStr), admin)
 	if err != nil { // Return error: Can't unmarshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
-	
+
 	admin.AdminID = stub.GetTxID()
 	admin.Status = "Active"
 
@@ -38,6 +38,8 @@ func (sah *AdminHandler) CreateAdmin(stub shim.ChaincodeStubInterface, adminStr 
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -48,9 +50,8 @@ func (sah *AdminHandler) GetAllAdmin(stub shim.ChaincodeStubInterface) (result *
 	res := util.GetAllData(stub, new(model.Admin), model.AdminTable)
 	if res.Status == 200 {
 		return &res.Message, nil
-	} else {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 }
 
 // GetAdminByID ...
@@ -110,6 +111,8 @@ func (sah *AdminHandler) UpdateAdmin(stub shim.ChaincodeStubInterface, adminStr 
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil

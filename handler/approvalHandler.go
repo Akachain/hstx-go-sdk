@@ -68,6 +68,8 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
@@ -78,9 +80,8 @@ func (sah *ApprovalHandler) GetAllApproval(stub shim.ChaincodeStubInterface) (re
 	res := util.GetAllData(stub, new(model.Approval), model.ApprovalTable)
 	if res.Status == 200 {
 		return &res.Message, nil
-	} else {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 }
 
 // GetApprovalByID ...
@@ -140,6 +141,8 @@ func (sah *ApprovalHandler) UpdateApproval(stub shim.ChaincodeStubInterface, app
 	if err != nil { // Return error: Can't marshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
+	temp := ""
+	result = &temp
 	*result = string(bytes)
 
 	return result, nil
