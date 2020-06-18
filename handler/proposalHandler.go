@@ -173,15 +173,24 @@ func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, pro
 func (sah *ProposalHandler) CommitProposal(stub shim.ChaincodeStubInterface, proposalID string, criteria int) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CommitProposal func: %+v\n", proposalID)
 
-	resIterator, err := hUtil.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", proposalID))
+	queryString := fmt.Sprintf(`
+		{ "selector": 
+			{
+				"_id": 
+					{"$gt": "\u0000Approval\u0000%s",
+					"$lt": "\u0000Approval\u0000%s\uFFFF"}
+			}
+		}`, proposalID, proposalID)
+	common.Logger.Debugf("queryString: %v", queryString)
+	stateQueryIterator, err := stub.GetQueryResult(queryString)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	defer resIterator.Close()
+	defer stateQueryIterator.Close()
 
 	count := 0
-	for resIterator.HasNext() {
-		_, err := resIterator.Next()
+	for stateQueryIterator.HasNext() {
+		_, err := stateQueryIterator.Next()
 		if err != nil {
 			return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 		}

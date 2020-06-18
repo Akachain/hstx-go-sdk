@@ -56,7 +56,7 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	}
 
 	common.Logger.Infof("Creating Approval: %+v\n", approval)
-	err = util.Createdata(stub, model.ApprovalTable, []string{approval.ApprovalID}, &approval)
+	err = util.Createdata(stub, model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID}, &approval)
 	if err != nil { // Return error: Fail to insert data
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR5], err.Error(), common.GetLine())
 	}
