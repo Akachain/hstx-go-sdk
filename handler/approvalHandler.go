@@ -25,7 +25,7 @@ import (
 type ApprovalHandler struct{}
 
 // CreateApproval ...
-func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
+func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string, criteria int) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateApproval func: %+v\n", approvalStr)
 
 	approval := new(model.Approval)
@@ -62,7 +62,7 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	}
 
 	// Update proposal if necessary
-	sah.updateProposal(stub, approval)
+	sah.updateProposal(stub, approval, criteria)
 
 	bytes, err := json.Marshal(approval)
 	if err != nil { // Return error: Can't marshal json
@@ -91,9 +91,8 @@ func (sah *ApprovalHandler) GetApprovalByID(stub shim.ChaincodeStubInterface, ap
 	res := util.GetDataByID(stub, approvalID, new(model.Approval), model.ApprovalTable)
 	if res.Status == 200 {
 		return &res.Message, nil
-	} else {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 }
 
 // UpdateApproval ...
@@ -208,7 +207,7 @@ func (sah *ApprovalHandler) verifySignature(stub shim.ChaincodeStubInterface, ap
 }
 
 // updateProposal ...
-func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) error {
+func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval, criteria int) error {
 	if strings.Compare(approval.Status, "Rejected") == 0 {
 		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
 		if err != nil {
@@ -243,7 +242,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 		}
 		count++
 	}
-	if count >= 1 {
+	if count >= criteria {
 		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
 		if err != nil {
 			return err
