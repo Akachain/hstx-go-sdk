@@ -219,7 +219,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 
 		if strings.Compare(proposal.Status, "Pending") == 0 {
 			proposal.Status = approval.Status
-			proposal.CreatedAt = approval.CreatedAt
+			proposal.UpdatedAt = approval.CreatedAt
 			bytes, err := json.Marshal(proposal)
 			if err != nil {
 				return err
@@ -251,7 +251,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 		mapstructure.Decode(rawProposal, proposal)
 		if strings.Compare(proposal.Status, "Pending") == 0 {
 			proposal.Status = "Approved"
-			proposal.CreatedAt = approval.CreatedAt
+			proposal.UpdatedAt = approval.CreatedAt
 			bytes, err := json.Marshal(proposal)
 			if err != nil {
 				return err
