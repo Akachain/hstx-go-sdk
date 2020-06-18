@@ -10,4 +10,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hyperledger/fabric v1.4.4
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/satori/go.uuid v1.2.0
+	gotest.tools v2.2.0+incompatible
 )

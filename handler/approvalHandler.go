@@ -34,11 +34,12 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
-	rs, err := hUtil.GetByTwoColumns(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID), "ApproverID", fmt.Sprintf("\"%s\"", approval.ApproverID))
+	compositeKey, _ := stub.CreateCompositeKey(model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID})
+	rs, err := stub.GetState(compositeKey)
 	if err != nil { // Return error: Fail to get data
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	if rs.HasNext() { // Return error: Only signing once
+	if len(rs) > 0 { // Return error: Only signing once
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR9], "This proposal had already been approved", common.GetLine())
 	}
 
@@ -149,7 +150,6 @@ func (sah *ApprovalHandler) UpdateApproval(stub shim.ChaincodeStubInterface, app
 
 // verifySignature ...
 func (sah *ApprovalHandler) verifySignature(stub shim.ChaincodeStubInterface, approverID string, signature string, message string) error {
-
 	if len(approverID) == 0 {
 		return errors.New("approverID is empty")
 	}
@@ -229,7 +229,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 		return nil
 	}
 
-	resIterator, err := hUtil.GetByOneColumn(stub, model.ApprovalTable, "ProposalID", fmt.Sprintf("\"%s\"", approval.ProposalID))
+	resIterator, err := hUtil.GetContainKey(stub, model.ApprovalTable, approval.ProposalID)
 	if err != nil {
 		return err
 	}

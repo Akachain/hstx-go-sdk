@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"fmt"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/hyperledger/fabric/bccsp/utils"
@@ -63,6 +63,24 @@ func GetByOneColumn(stub shim.ChaincodeStubInterface, table string, column strin
 // GetByTwoColumns func to get information
 func GetByTwoColumns(stub shim.ChaincodeStubInterface, table string, column1 string, value1 interface{}, column2 string, value2 interface{}) (resultsIterator shim.StateQueryIteratorInterface, err error) {
 	queryString := fmt.Sprintf("{\"selector\": {\"_id\": {\"$regex\": \"%s\"},\"%s\": %v, \"%s\": %v}}", table, column1, value1, column2, value2)
+	common.Logger.Info(queryString)
+	resultsIterator, err = stub.GetQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+	return resultsIterator, nil
+}
+
+// GetContainKey func to get information
+func GetContainKey(stub shim.ChaincodeStubInterface, table string, key string) (resultsIterator shim.StateQueryIteratorInterface, err error) {
+	queryString := fmt.Sprintf(`
+		{ "selector": 
+			{
+				"_id": 
+					{"$gt": "\u0000%s\u0000%s",
+					"$lt": "\u0000%s\u0000%s\uFFFF"}
+			}
+		}`, table, key, table, key)
 	common.Logger.Info(queryString)
 	resultsIterator, err = stub.GetQueryResult(queryString)
 	if err != nil {
