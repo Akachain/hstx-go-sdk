@@ -25,13 +25,28 @@ import (
 type ApprovalHandler struct{}
 
 // CreateApproval ...
-func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string, criteria int) (result *string, err error) {
+func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateApproval func: %+v\n", approvalStr)
 
 	approval := new(model.Approval)
 	err = json.Unmarshal([]byte(approvalStr), approval)
 	if err != nil { // Return error: Can't unmarshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+
+	proposalStr, err := new(ProposalHandler).GetProposalByID(stub, approval.ProposalID)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
+
+	var proposal model.Proposal
+	err = json.Unmarshal([]byte(*proposalStr), &proposal)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+
+	if strings.Compare("Rejected", proposal.Status) == 0 {
+		return nil, fmt.Errorf("%s %s", "The proposal was rejected", common.GetLine())
 	}
 
 	compositeKey, _ := stub.CreateCompositeKey(model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID})
@@ -63,7 +78,7 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	}
 
 	// Update proposal if necessary
-	sah.updateProposal(stub, approval, criteria)
+	sah.updateProposal(stub, approval)
 
 	bytes, err := json.Marshal(approval)
 	if err != nil { // Return error: Can't marshal json
@@ -207,17 +222,17 @@ func (sah *ApprovalHandler) verifySignature(stub shim.ChaincodeStubInterface, ap
 }
 
 // updateProposal ...
-func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval, criteria int) error {
+func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, approval *model.Approval) error {
+	rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
+	if err != nil {
+		return err
+	}
+
+	proposal := new(model.Proposal)
+	mapstructure.Decode(rawProposal, proposal)
+
 	if strings.Compare(approval.Status, "Rejected") == 0 {
-		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
-		if err != nil {
-			return err
-		}
-
-		proposal := new(model.Proposal)
-		mapstructure.Decode(rawProposal, proposal)
-
-		if strings.Compare(proposal.Status, "Pending") == 0 {
+		if strings.Compare(proposal.Status, "Commited") != 0 {
 			proposal.Status = approval.Status
 			proposal.UpdatedAt = approval.CreatedAt
 			bytes, err := json.Marshal(proposal)
@@ -236,13 +251,22 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 	defer resIterator.Close()
 	count := 0
 	for resIterator.HasNext() {
-		_, err := resIterator.Next()
+		stateIterator, err := resIterator.Next()
 		if err != nil {
 			return err
 		}
-		count++
+		approvalState := new(model.Approval)
+		err = json.Unmarshal(stateIterator.Value, approvalState)
+		if err != nil { // Convert JSON error
+			return err
+		}
+		
+		if strings.Compare("Approved", approvalState.Status) == 0 {
+			count++
+		} 
 	}
-	if count >= criteria {
+	// Check approved number >= proposal.QuorumNumber to update the Proposal's satatus
+	if count >= proposal.QuorumNumber {
 		rawProposal, err := util.Getdatabyid(stub, approval.ProposalID, model.ProposalTable)
 		if err != nil {
 			return err

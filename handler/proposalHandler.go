@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Akachain/akc-go-sdk/common"
@@ -148,7 +149,13 @@ func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, pro
 		if len(newProposalValue.Field(i).String()) > 0 {
 			field := proposalValue.FieldByName(fieldName)
 			if field.CanSet() {
-				field.SetString(newProposalValue.Field(i).String())
+				fieldType := newProposalValue.Type().Field(i).Type
+				if strings.Compare("string", fieldType.String()) == 0 {
+					field.SetString(newProposalValue.Field(i).String())
+				}
+				if strings.Compare("int", fieldType.String()) == 0 {
+					field.SetInt(newProposalValue.Field(i).Int())
+				}
 			}
 		}
 	}
@@ -170,36 +177,27 @@ func (sah *ProposalHandler) UpdateProposal(stub shim.ChaincodeStubInterface, pro
 }
 
 //CommitProposal ...
-func (sah *ProposalHandler) CommitProposal(stub shim.ChaincodeStubInterface, proposalID string, criteria int) (result *string, err error) {
+func (sah *ProposalHandler) CommitProposal(stub shim.ChaincodeStubInterface, proposalID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CommitProposal func: %+v\n", proposalID)
 
-	stateQueryIterator, err := hUtil.GetContainKey(stub, model.ApprovalTable, proposalID)
-
-	if err != nil {
-		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
-	}
-	defer stateQueryIterator.Close()
-
-	count := 0
-	for stateQueryIterator.HasNext() {
-		_, err := stateQueryIterator.Next()
-		if err != nil {
-			return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
-		}
-		count++
-	}
-	if count < criteria {
-		return nil, fmt.Errorf("%s %s", "not enought signature", common.GetLine())
-	}
-
-	// Get proposal information
-	rawProposal, err := util.Getdatabyid(stub, proposalID, model.ProposalTable)
+	proposalStr, err := sah.GetProposalByID(stub, proposalID)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
 
-	proposal := new(model.Proposal)
-	mapstructure.Decode(rawProposal, proposal)
+	var proposal model.Proposal
+	err = json.Unmarshal([]byte(*proposalStr), &proposal)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+
+	if strings.Compare("Pending", proposal.Status) == 0 {
+		return nil, fmt.Errorf("%s %s", "Not enough approval", common.GetLine())
+	}
+
+	if strings.Compare("Rejected", proposal.Status) == 0 {
+		return nil, fmt.Errorf("%s %s", "The proposal was rejected", common.GetLine())
+	}
 
 	proposal.Status = "Committed"
 	timestamp, err := stub.GetTxTimestamp()

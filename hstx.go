@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/Akachain/akc-go-sdk/common"
 	hdl "github.com/Akachain/hstx-go-sdk/handler"
@@ -142,16 +141,8 @@ func createProposal(stub shim.ChaincodeStubInterface, args []string) pb.Response
 // createApproval
 func createApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	approvalStr := args[0]
-	criteria, err := strconv.Atoi(args[1])
-	if err != nil {
-		// Returning error: Can't convert data
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
-	}
 
-	created, err := handler.ApprovalHandler.CreateApproval(stub, approvalStr, criteria)
+	created, err := handler.ApprovalHandler.CreateApproval(stub, approvalStr)
 	if err != nil {
 		// Returning error: Can't create data
 		return common.RespondError(common.ResponseError{
@@ -172,16 +163,8 @@ func createApproval(stub shim.ChaincodeStubInterface, args []string) pb.Response
 // commitProposal
 func commitProposal(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	approvalStr := args[0]
-	criteria, err := strconv.Atoi(args[1])
-	if err != nil {
-		// Returning error: Can't convert data
-		return common.RespondError(common.ResponseError{
-			ResCode: common.ERR3,
-			Msg:     fmt.Sprintf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine()),
-		})
-	}
 
-	created, err := handler.ProposalHandler.CommitProposal(stub, approvalStr, criteria)
+	created, err := handler.ProposalHandler.CommitProposal(stub, approvalStr)
 	if err != nil {
 		// Returning error: Can't create data
 		return common.RespondError(common.ResponseError{

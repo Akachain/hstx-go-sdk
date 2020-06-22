@@ -132,6 +132,7 @@ func TestCreateProposal(t *testing.T) {
 	proposal := model.Proposal{
 		CreatedBy: "Admin1",
 		Message: "Chuyển 1 tỷ cho anh Long sex",
+		QuorumNumber: 1,
 	}
 
 	proposalBytes, _ := json.Marshal(proposal)
@@ -181,12 +182,13 @@ func TestCreateApproval(t *testing.T) {
 		Signature: "MEUCIQDaeCaR1s33mIse0i5hq69srNfBHTajF47pibvJoLY7KwIgD/eerEBfeOTizizYIinZ7WLJ90UFpS6IBuEe0sqpYaM=",
 		Message: "EWJcgjcFkTyobMwx1j6p2xtEmKE8H/ctu5jr4jVilUgBAAAABSpqAxztD4zx7PrOdW1ur4ba/eE1yjhPtYY2QCNcOz4N",
 		Status: "Approved",
+		// Status: "Rejected",
 	}
 
 	approvalBytes, _ := json.Marshal(approval)
 
 	// Create a new Approval
-	response := util.MockInvokeTransaction(t, stub, [][]byte{[]byte("CreateApproval"), approvalBytes, []byte("2")})
+	response := util.MockInvokeTransaction(t, stub, [][]byte{[]byte("CreateApproval"), approvalBytes})
 	
 	var result map[string]interface{}
 	json.Unmarshal([]byte(response), &result)
@@ -228,7 +230,7 @@ func TestCommitProposal(t *testing.T) {
 	// stub := setupMock()
 
 	// Create a new Approval
-	response := util.MockInvokeTransaction(t, stub, [][]byte{[]byte("CommitProposal"), []byte(proposalID), []byte("2")})
+	response := util.MockInvokeTransaction(t, stub, [][]byte{[]byte("CommitProposal"), []byte(proposalID)})
 	
 	var result map[string]interface{}
 	json.Unmarshal([]byte(response), &result)
@@ -244,7 +246,7 @@ func TestCommitProposal(t *testing.T) {
 	assert.Equal(t, proposalID, proposal.ProposalID)
 
 	// Check if the created data exists
-	compositeKey, _ := stub.CreateCompositeKey(model.ApprovalTable, []string{proposalID})
+	compositeKey, _ := stub.CreateCompositeKey(model.ProposalTable, []string{proposalID})
 	state, _ := stub.GetState(compositeKey)
 
 	var stateProposal model.Proposal
