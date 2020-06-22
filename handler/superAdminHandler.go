@@ -50,19 +50,30 @@ func (sah *SuperAdminHandler) GetAllSuperAdmin(stub shim.ChaincodeStubInterface)
 	if res.Status == 200 {
 		return &res.Message, nil
 	}
-	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], res.Message, common.GetLine())
 }
 
 // GetSuperAdminByID ...
 func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface, superAdminID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to SuperAdminHandler func: %+v\n", superAdminID)
 
-	res := util.GetDataByID(stub, superAdminID, new(model.SuperAdmin), model.SuperAdminTable)
-	if res.Status == 200 {
-		return &res.Message, nil
-	} else {
+	rawSuperAdmin, err := util.Getdatabyid(stub, superAdminID, model.SuperAdminTable)
+	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+
+	superAdmin := new(model.SuperAdmin)
+	mapstructure.Decode(rawSuperAdmin, superAdmin)
+
+	bytes, err := json.Marshal(superAdmin)
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+	temp := ""
+	result = &temp
+	*result = string(bytes) 
+
+	return result, nil
 }
 
 //UpdateSuperAdmin ...

@@ -51,19 +51,30 @@ func (sah *AdminHandler) GetAllAdmin(stub shim.ChaincodeStubInterface) (result *
 	if res.Status == 200 {
 		return &res.Message, nil
 	}
-	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], res.Message, common.GetLine())
 }
 
 // GetAdminByID ...
 func (sah *AdminHandler) GetAdminByID(stub shim.ChaincodeStubInterface, adminID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to GetAdminByID func: %+v\n", adminID)
 
-	res := util.GetDataByID(stub, adminID, new(model.Admin), model.AdminTable)
-	if res.Status == 200 {
-		return &res.Message, nil
-	} else {
+	rawAdmin, err := util.Getdatabyid(stub, adminID, model.AdminTable)
+	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+
+	admin := new(model.Admin)
+	mapstructure.Decode(rawAdmin, admin)
+
+	bytes, err := json.Marshal(admin)
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+	temp := ""
+	result = &temp
+	*result = string(bytes) 
+
+	return result, nil
 }
 
 //UpdateAdmin ...

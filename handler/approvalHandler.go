@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/Akachain/akc-go-sdk/util"
@@ -71,6 +72,13 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 		approval.Status = "Approved"
 	}
 
+	timestamp, err := stub.GetTxTimestamp()
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
+	formatedTime := time.Unix(timestamp.Seconds, 0)
+	approval.CreatedAt = formatedTime.String()
+
 	common.Logger.Infof("Creating Approval: %+v\n", approval)
 	err = util.Createdata(stub, model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID}, &approval)
 	if err != nil { // Return error: Fail to insert data
@@ -97,18 +105,30 @@ func (sah *ApprovalHandler) GetAllApproval(stub shim.ChaincodeStubInterface) (re
 	if res.Status == 200 {
 		return &res.Message, nil
 	}
-	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], res.Message, common.GetLine())
 }
 
 // GetApprovalByID ...
 func (sah *ApprovalHandler) GetApprovalByID(stub shim.ChaincodeStubInterface, approvalID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to GetApprovalByID func: %+v\n", approvalID)
 
-	res := util.GetDataByID(stub, approvalID, new(model.Approval), model.ApprovalTable)
-	if res.Status == 200 {
-		return &res.Message, nil
+	rawApproval, err := util.Getdatabyid(stub, approvalID, model.ApprovalTable)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+
+	approval := new(model.Approval)
+	mapstructure.Decode(rawApproval, approval)
+
+	bytes, err := json.Marshal(approval)
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+	temp := ""
+	result = &temp
+	*result = string(bytes) 
+
+	return result, nil
 }
 
 // UpdateApproval ...

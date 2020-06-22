@@ -31,6 +31,14 @@ func (sah *ProposalHandler) CreateProposal(stub shim.ChaincodeStubInterface, pro
 	proposal.ProposalID = stub.GetTxID()
 	proposal.Status = "Pending"
 
+	timestamp, err := stub.GetTxTimestamp()
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
+	formatedTime := time.Unix(timestamp.Seconds, 0)
+	proposal.CreatedAt = formatedTime.String()
+	proposal.UpdatedAt = formatedTime.String()
+
 	common.Logger.Infof("Create Proposal: %+v\n", proposal)
 	err = util.Createdata(stub, model.ProposalTable, []string{proposal.ProposalID}, &proposal)
 	if err != nil { // Return error: Fail to insert data
@@ -54,19 +62,30 @@ func (sah *ProposalHandler) GetAllProposal(stub shim.ChaincodeStubInterface) (re
 	if res.Status == 200 {
 		return &res.Message, nil
 	}
-	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], res.Message, common.GetLine())
 }
 
 // GetProposalByID ...
 func (sah *ProposalHandler) GetProposalByID(stub shim.ChaincodeStubInterface, proposalID string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to GetProposalByID func: %+v\n", proposalID)
 
-	res := util.GetDataByID(stub, proposalID, new(model.Proposal), model.ProposalTable)
-	if res.Status == 200 {
-		return &res.Message, nil
-	} else {
+	rawProposal, err := util.Getdatabyid(stub, proposalID, model.ProposalTable)
+	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
+
+	proposal := new(model.Proposal)
+	mapstructure.Decode(rawProposal, proposal)
+
+	bytes, err := json.Marshal(proposal)
+	if err != nil { // Return error: Can't marshal json
+		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+	temp := ""
+	result = &temp
+	*result = string(bytes) 
+
+	return result, nil
 }
 
 // GetPendingProposalBySuperAdminID ...

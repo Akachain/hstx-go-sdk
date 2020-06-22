@@ -2,11 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/Akachain/hstx-go-sdk/model"
-	uuid "github.com/satori/go.uuid"
 	"gotest.tools/assert"
 
 	"github.com/Akachain/akc-go-sdk/common"
@@ -18,30 +16,24 @@ var superAdminID string
 var adminID string
 var proposalID string
 var approvalID string
-var stub = setupMock()
+var stub = setupMock(false)
 
-func setupMock() *util.MockStubExtend {
+func setupMock(isDropDB bool) *util.MockStubExtend {
 
 	// Initialize mockstubextend
 	cc := new(Chaincode)
 	stub := util.NewMockStubExtend(shim.NewMockStub("TestMockStub", cc), cc)
 
 	// Create a new database, Drop old database
-	db, _ := util.NewCouchDBHandlerWithConnectionAuthentication(true)
+	db, _ := util.NewCouchDBHandlerWithConnectionAuthentication(isDropDB)
 	stub.SetCouchDBConfiguration(db)
 	return stub
 }
 
-// Generate random transaction ID
-func genID() string {
-	uid := uuid.Must(uuid.NewV4())
-	id := fmt.Sprintf("%s", uid)
-	return id
-}
-
 func TestCreateSuperAdmin(t *testing.T) {
 	common.Logger.SetLevel(shim.LogDebug)
-	// stub := setupMock()
+	
+	stub = setupMock(true)
 
 	superAdminID = "SYduDJxe6-MeAqyzGYqUB9LXK0e79o63OH2Tp7npcGdMG_IfaN6WAqfIfs388HlHjW9PIE2tP7MPGxzof6406g"
 
@@ -87,7 +79,10 @@ func TestCreateSuperAdmin(t *testing.T) {
 
 func TestCreateAdmin(t *testing.T) {
 	common.Logger.SetLevel(shim.LogDebug)
-	// stub := setupMock()
+	
+	if stub == nil {
+		stub = setupMock(false)
+	}
 
 	admin := model.Admin{
 		Name: "SonPH",
@@ -127,7 +122,10 @@ func TestCreateAdmin(t *testing.T) {
 
 func TestCreateProposal(t *testing.T) {
 	common.Logger.SetLevel(shim.LogDebug)
-	// stub := setupMock()
+	
+	if stub == nil {
+		stub = setupMock(false)
+	}
 
 	proposal := model.Proposal{
 		CreatedBy: "Admin1",
@@ -173,7 +171,10 @@ func TestCreateProposal(t *testing.T) {
 
 func TestCreateApproval(t *testing.T) {
 	common.Logger.SetLevel(shim.LogDebug)
-	// stub := setupMock()
+	
+	if stub == nil {
+		stub = setupMock(false)
+	}
 
 	approval := model.Approval{
 		ProposalID: proposalID,
@@ -227,7 +228,10 @@ func TestCreateApproval(t *testing.T) {
 
 func TestCommitProposal(t *testing.T) {
 	common.Logger.SetLevel(shim.LogDebug)
-	// stub := setupMock()
+	
+	if stub == nil {
+		stub = setupMock(false)
+	}
 
 	// Create a new Approval
 	response := util.MockInvokeTransaction(t, stub, [][]byte{[]byte("CommitProposal"), []byte(proposalID)})
