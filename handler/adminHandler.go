@@ -8,6 +8,7 @@ import (
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/Akachain/akc-go-sdk/util"
 	"github.com/Akachain/hstx-go-sdk/model"
+	hUtil "github.com/Akachain/hstx-go-sdk/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/mitchellh/mapstructure"
 )
@@ -25,7 +26,7 @@ func (sah *AdminHandler) CreateAdmin(stub shim.ChaincodeStubInterface, adminStr 
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
-	admin.AdminID = stub.GetTxID()
+	admin.AdminID = hUtil.GenerateDocumentID(stub)
 	admin.Status = "Active"
 
 	common.Logger.Infof("Create Admin: %+v\n", admin)

@@ -7,12 +7,23 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"strings"
 
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/hyperledger/fabric/bccsp/utils"
 	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
+
+// GenerateDocumentID func to generate ID
+func GenerateDocumentID(stub shim.ChaincodeStubInterface) string {
+	// h := md5.New()
+	txID := stub.GetTxID()
+	// dataString := strings.Join(data, "")
+	sum := sha256.Sum256([]byte(txID))
+
+	return fmt.Sprintf("%x", sum[0:19])
+}
 
 // GetCertID func to get Certtificate ID of current user
 func GetCertID(stub shim.ChaincodeStubInterface) (*string, error) {
@@ -47,6 +58,19 @@ func GetAttributeValue(stub shim.ChaincodeStubInterface, attrName string) (*stri
 		return nil, fmt.Errorf("Can't get attribute '%s' in the Certificate. Cause: %s", attrName, common.GetLine())
 	}
 	return &val, nil
+}
+
+// IsSuperAdmin func to check role Super Admin of caller. Return nil if true
+func IsSuperAdmin(stub shim.ChaincodeStubInterface) error {
+	role, err := GetAttributeValue(stub, "hstx.role")
+	if err != nil {
+		return err
+	}
+
+	if strings.Compare("SuperAdmin", *role) != 0 {
+		return fmt.Errorf("This certificate doesn't contain role SuperAdmin. Cause: %s", common.GetLine())
+	}
+	return nil
 }
 
 // GetByOneColumn func to get information

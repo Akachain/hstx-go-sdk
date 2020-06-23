@@ -28,7 +28,7 @@ func (sah *ProposalHandler) CreateProposal(stub shim.ChaincodeStubInterface, pro
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
-	proposal.ProposalID = stub.GetTxID()
+	proposal.ProposalID = hUtil.GenerateDocumentID(stub)
 	proposal.Status = "Pending"
 
 	timestamp, err := stub.GetTxTimestamp()

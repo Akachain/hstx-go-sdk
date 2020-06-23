@@ -41,7 +41,7 @@ func TestCreateSuperAdmin(t *testing.T) {
 		SuperAdminID: superAdminID,
 		Name:         "TestSuperAdmin" + superAdminID,
 		PublicKey:    "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeSohIzvASeU0nZADWDFS/WI/0+AU\n8tRQrGtRtaZ2hv6JCdq+BK1euL4VFPqVw5ddYbw0+t4b5zQDah7qrP41ug==\n-----END PUBLIC KEY-----\n",
-		Status:       "Active",
+		Status:       "A",
 	}
 
 	superAdminBytes, _ := json.Marshal(superAdmin)

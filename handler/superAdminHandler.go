@@ -19,14 +19,21 @@ type SuperAdminHandler struct{}
 func (sah *SuperAdminHandler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateSuperAdmin func: %+v\n", superAdminStr)
 
+	// err = hUtil.IsSuperAdmin(stub)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	// }
+
 	superAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), superAdmin)
 	if err != nil { // Return error: Can't unmarshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
-	superAdmin.Status = "Active"
-
+	if superAdmin.Status == "" {
+		superAdmin.Status = "A"
+	}
+	
 	common.Logger.Infof("Create SuperAdmin: %+v\n", superAdmin)
 	err = util.Createdata(stub, model.SuperAdminTable, []string{superAdmin.SuperAdminID}, &superAdmin)
 	if err != nil { // Return error: Fail to insert data
@@ -55,7 +62,7 @@ func (sah *SuperAdminHandler) GetAllSuperAdmin(stub shim.ChaincodeStubInterface)
 
 // GetSuperAdminByID ...
 func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface, superAdminID string) (result *string, err error) {
-	common.Logger.Debugf("Input-data sent to SuperAdminHandler func: %+v\n", superAdminID)
+	common.Logger.Debugf("Input-data sent to GetSuperAdminByID func: %+v\n", superAdminID)
 
 	rawSuperAdmin, err := util.Getdatabyid(stub, superAdminID, model.SuperAdminTable)
 	if err != nil {
@@ -79,6 +86,11 @@ func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface
 //UpdateSuperAdmin ...
 func (sah *SuperAdminHandler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to UpdateSuperAdmin func: %+v\n", superAdminStr)
+
+	// err = hUtil.IsSuperAdmin(stub)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	// }
 
 	newSuperAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), newSuperAdmin)

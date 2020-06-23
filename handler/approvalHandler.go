@@ -29,12 +29,26 @@ type ApprovalHandler struct{}
 func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateApproval func: %+v\n", approvalStr)
 
+	// Check role: SuperAdmin
+	// err = hUtil.IsSuperAdmin(stub)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	// }
+
+	// Parse approvalStr to approval
 	approval := new(model.Approval)
 	err = json.Unmarshal([]byte(approvalStr), approval)
 	if err != nil { // Return error: Can't unmarshal json
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
+	// Check SuperAdmin's status
+	err = sah.checkApproverStatus(stub, approval.ApproverID)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s %s", "This approver is not active", err.Error(), common.GetLine())
+	}
+
+	// Get proposal by approval.ProposalID
 	proposalStr, err := new(ProposalHandler).GetProposalByID(stub, approval.ProposalID)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
@@ -46,10 +60,12 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
 	}
 
+	// Check whether the proposal was rejected or not
 	if strings.Compare("Rejected", proposal.Status) == 0 {
 		return nil, fmt.Errorf("%s %s", "The proposal was rejected", common.GetLine())
 	}
 
+	// Check this approver hasn't signed the proposal
 	compositeKey, _ := stub.CreateCompositeKey(model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID})
 	rs, err := stub.GetState(compositeKey)
 	if err != nil { // Return error: Fail to get data
@@ -59,19 +75,14 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR9], "This proposal had already been approved", common.GetLine())
 	}
 
-	approval.ApprovalID = stub.GetTxID()
-
 	// Verify signature with the singed message
 	err = sah.verifySignature(stub, approval.ApproverID, approval.Signature, approval.Message)
 	if err != nil { // Return error: Verify error
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR8], err.Error(), common.GetLine())
 	}
 
-	// Set approval's status
-	if len(approval.Status) == 0 {
-		approval.Status = "Approved"
-	}
-
+	// Set approval.ApprovalID & approval.CreatedAt
+	approval.ApprovalID = hUtil.GenerateDocumentID(stub)
 	timestamp, err := stub.GetTxTimestamp()
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
@@ -79,6 +90,7 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	formatedTime := time.Unix(timestamp.Seconds, 0)
 	approval.CreatedAt = formatedTime.String()
 
+	// Create Approval
 	common.Logger.Infof("Creating Approval: %+v\n", approval)
 	err = util.Createdata(stub, model.ApprovalTable, []string{approval.ProposalID, approval.ApproverID}, &approval)
 	if err != nil { // Return error: Fail to insert data
@@ -135,6 +147,11 @@ func (sah *ApprovalHandler) GetApprovalByID(stub shim.ChaincodeStubInterface, ap
 func (sah *ApprovalHandler) UpdateApproval(stub shim.ChaincodeStubInterface, approvalStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to UpdateApproval func: %+v\n", approvalStr)
 
+	err = hUtil.IsSuperAdmin(stub)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	}
+
 	newApproval := new(model.Approval)
 	err = json.Unmarshal([]byte(approvalStr), newApproval)
 	if err != nil { // Return error: Can't unmarshal json
@@ -181,6 +198,28 @@ func (sah *ApprovalHandler) UpdateApproval(stub shim.ChaincodeStubInterface, app
 	*result = string(bytes)
 
 	return result, nil
+}
+
+// checkApproverStatus func to check whether the SuperAdmin is active or inactive
+func (sah *ApprovalHandler) checkApproverStatus(stub shim.ChaincodeStubInterface, approverID string) error {
+	// Get approver by approval.ApproverID
+	superAdminStr, err := new(SuperAdminHandler).GetSuperAdminByID(stub, approverID)
+	if err != nil {
+		return fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
+	}
+
+	var superAdmin model.SuperAdmin
+	err = json.Unmarshal([]byte(*superAdminStr), &superAdmin)
+	if err != nil {
+		return fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR3], err.Error(), common.GetLine())
+	}
+
+	// Check SuperAdmin's status
+	if superAdmin.Status != "A" && superAdmin.Status != "Active" {
+		return fmt.Errorf("%s %s", "This approver is not active", common.GetLine())
+	}
+	// If the SuperAdmin is active, return nil
+	return nil
 }
 
 // verifySignature ...
