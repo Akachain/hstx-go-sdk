@@ -309,6 +309,9 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 	}
 	defer resIterator.Close()
 	count := 0
+	if approval.Status == "Approved" {
+		count ++
+	}
 	for resIterator.HasNext() {
 		stateIterator, err := resIterator.Next()
 		if err != nil {
