@@ -35,9 +35,8 @@ func (sah *ProposalHandler) CreateProposal(stub shim.ChaincodeStubInterface, pro
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	formatedTime := time.Unix(timestamp.Seconds, 0)
-	proposal.CreatedAt = formatedTime.String()
-	proposal.UpdatedAt = formatedTime.String()
+	proposal.CreatedAt = time.Unix(timestamp.Seconds, 0).Format(time.RFC3339)
+	proposal.UpdatedAt = proposal.CreatedAt
 
 	common.Logger.Infof("Create Proposal: %+v\n", proposal)
 	err = util.Createdata(stub, model.ProposalTable, []string{proposal.ProposalID}, &proposal)

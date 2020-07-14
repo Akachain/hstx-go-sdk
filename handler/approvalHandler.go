@@ -30,10 +30,10 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	common.Logger.Debugf("Input-data sent to CreateApproval func: %+v\n", approvalStr)
 
 	// Check role: SuperAdmin
-	// err = hUtil.IsSuperAdmin(stub)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
-	// }
+	err = hUtil.IsSuperAdmin(stub)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	}
 
 	// Parse approvalStr to approval
 	approval := new(model.Approval)
@@ -87,8 +87,7 @@ func (sah *ApprovalHandler) CreateApproval(stub shim.ChaincodeStubInterface, app
 	if err != nil {
 		return nil, fmt.Errorf("%s %s %s", common.ResCodeDict[common.ERR4], err.Error(), common.GetLine())
 	}
-	formatedTime := time.Unix(timestamp.Seconds, 0)
-	approval.CreatedAt = formatedTime.String()
+	approval.CreatedAt = time.Unix(timestamp.Seconds, 0).Format(time.RFC3339)
 
 	// Create Approval
 	common.Logger.Infof("Creating Approval: %+v\n", approval)
@@ -138,7 +137,7 @@ func (sah *ApprovalHandler) GetApprovalByID(stub shim.ChaincodeStubInterface, ap
 	}
 	temp := ""
 	result = &temp
-	*result = string(bytes) 
+	*result = string(bytes)
 
 	return result, nil
 }
@@ -310,7 +309,7 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 	defer resIterator.Close()
 	count := 0
 	if approval.Status == "Approved" {
-		count ++
+		count++
 	}
 	for resIterator.HasNext() {
 		stateIterator, err := resIterator.Next()
@@ -322,10 +321,10 @@ func (sah *ApprovalHandler) updateProposal(stub shim.ChaincodeStubInterface, app
 		if err != nil { // Convert JSON error
 			return err
 		}
-		
+
 		if strings.Compare("Approved", approvalState.Status) == 0 {
 			count++
-		} 
+		}
 	}
 	// Check approved number >= proposal.QuorumNumber to update the Proposal's satatus
 	if count >= proposal.QuorumNumber {

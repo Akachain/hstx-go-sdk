@@ -17,9 +17,7 @@ import (
 
 // GenerateDocumentID func to generate ID
 func GenerateDocumentID(stub shim.ChaincodeStubInterface) string {
-	// h := md5.New()
 	txID := stub.GetTxID()
-	// dataString := strings.Join(data, "")
 	sum := sha256.Sum256([]byte(txID))
 
 	return fmt.Sprintf("%x", sum[0:19])

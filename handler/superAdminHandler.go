@@ -8,6 +8,7 @@ import (
 	"github.com/Akachain/akc-go-sdk/common"
 	"github.com/Akachain/akc-go-sdk/util"
 	"github.com/Akachain/hstx-go-sdk/model"
+	hUtil "github.com/Akachain/hstx-go-sdk/utils"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/mitchellh/mapstructure"
 )
@@ -19,10 +20,10 @@ type SuperAdminHandler struct{}
 func (sah *SuperAdminHandler) CreateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to CreateSuperAdmin func: %+v\n", superAdminStr)
 
-	// err = hUtil.IsSuperAdmin(stub)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
-	// }
+	err = hUtil.IsSuperAdmin(stub)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	}
 
 	superAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), superAdmin)
@@ -33,7 +34,7 @@ func (sah *SuperAdminHandler) CreateSuperAdmin(stub shim.ChaincodeStubInterface,
 	if superAdmin.Status == "" {
 		superAdmin.Status = "A"
 	}
-	
+
 	common.Logger.Infof("Create SuperAdmin: %+v\n", superAdmin)
 	err = util.Createdata(stub, model.SuperAdminTable, []string{superAdmin.SuperAdminID}, &superAdmin)
 	if err != nil { // Return error: Fail to insert data
@@ -78,7 +79,7 @@ func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface
 	}
 	temp := ""
 	result = &temp
-	*result = string(bytes) 
+	*result = string(bytes)
 
 	return result, nil
 }
@@ -87,10 +88,10 @@ func (sah *SuperAdminHandler) GetSuperAdminByID(stub shim.ChaincodeStubInterface
 func (sah *SuperAdminHandler) UpdateSuperAdmin(stub shim.ChaincodeStubInterface, superAdminStr string) (result *string, err error) {
 	common.Logger.Debugf("Input-data sent to UpdateSuperAdmin func: %+v\n", superAdminStr)
 
-	// err = hUtil.IsSuperAdmin(stub)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
-	// }
+	err = hUtil.IsSuperAdmin(stub)
+	if err != nil {
+		return nil, fmt.Errorf("%s %s", err.Error(), common.GetLine())
+	}
 
 	newSuperAdmin := new(model.SuperAdmin)
 	err = json.Unmarshal([]byte(superAdminStr), newSuperAdmin)
